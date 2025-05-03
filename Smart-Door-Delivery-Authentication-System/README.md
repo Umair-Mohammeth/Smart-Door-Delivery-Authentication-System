@@ -28,11 +28,5 @@ Smart-Door-Delivery-Authentication-System/
 - **Telegram Bot API** – for real-time alerts
 - **Arduino IDE** – development environment
 
-## 🛠 Contributors
-- Banuka Abeysundera (Team Leader)
-- Gihan Atupolage (Hardware Engineer)
-- Umair Mohommeth (System Designer)
-- Senuri Minhari (Software Engineer)
-
 ## 📄 License
 This project is licensed under the MIT License.
