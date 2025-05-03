@@ -12,8 +12,11 @@ This project is an IoT-based smart parcel security system designed to authentica
 
 ## 📁 Project Structure
 Smart-Door-Delivery-Authentication-System/
+
 ├── Docs/ # Project report and presentation
+
 ├── Code/ # Arduino code and logic
+
 └── README.md # Project overview
 
 ## 🔧 Technologies Used
