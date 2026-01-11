@@ -1,14 +1,58 @@
+// -- WiFi & Telegram Credentials --
 #define WIFI_SSID "YOUR_WIFI_SSID"
 #define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
 #define BOT_TOKEN "YOUR_TELEGRAM_BOT_TOKEN"
 #define CHAT_ID "YOUR_CHAT_ID"
 
+// -- Hardware Pin Definitions --
+// AI-Thinker ESP32-CAM
+#define PWDN_GPIO_NUM     32
+#define RESET_GPIO_NUM    -1
+#define XCLK_GPIO_NUM      0
+#define SIOD_GPIO_NUM     26
+#define SIOC_GPIO_NUM     27
+#define Y9_GPIO_NUM       35
+#define Y8_GPIO_NUM       34
+#define Y7_GPIO_NUM       39
+#define Y6_GPIO_NUM       36
+#define Y5_GPIO_NUM       21
+#define Y4_GPIO_NUM       19
+#define Y3_GPIO_NUM       18
+#define Y2_GPIO_NUM        5
+#define VSYNC_GPIO_NUM    25
+#define HREF_GPIO_NUM     23
+#define PCLK_GPIO_NUM     22
+
+// RFID Reader
+#define SS_PIN    13
+#define RST_PIN   12
+// HX711 Load Cell
+#define HX711_DOUT_PIN 2
+#define HX711_SCK_PIN  4
+// Servo Motor
+#define SERVO_PIN 15
+// Tamper Sensor (e.g., SW-420 vibration sensor)
+#define TAMPER_PIN 14
+
+// -- System Parameters --
+// How often the main loop runs (in milliseconds)
+const unsigned long executionInterval = 1000;
+// How long the door stays unlocked (in milliseconds)
+const unsigned long doorUnlockDuration = 1000;
+// Cooldown period for tamper alerts to prevent spam (in milliseconds)
+const unsigned long tamperAlertInterval = 5000;
+
+// -- Sensor & Actuator Settings --
+// Servo positions for locked and unlocked states
+const int SERVO_LOCKED_POS = 0;
+const int SERVO_UNLOCKED_POS = 90;
+// Weight threshold to detect a parcel
+#define PARCEL_DETECTION_THRESHOLD 1000
+// Calibration factor for the load cell (run a calibration sketch to find this value)
 #define HX711_CALIBRATION_FACTOR 1.0
 
-const int UID_LENGTH = 4;
-const int NUM_AUTHORIZED_UIDS = 2;
-
-byte authorizedUIDs[NUM_AUTHORIZED_UIDS][UID_LENGTH] = {
-  {0x01, 0x23, 0x45, 0x67},
-  {0x89, 0xAB, 0xCD, 0xEF}
-};
+// -- RFID Configuration --
+// The length of the UID (usually 4 or 7 bytes)
+#define UID_LENGTH 4
+// Path to the file storing authorized UIDs on the SD card
+#define UID_FILE "/uids.txt"
