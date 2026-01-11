@@ -37,6 +37,13 @@ This folder contains the source code and firmware for the Smart Door Delivery Au
   - `WiFi`
   - `FS` and `SD_MMC` for SD card handling
 
+## Dependencies
+This project relies on the following Arduino libraries. Please install them using the Arduino Library Manager:
+- **MFRC522** by GitHubCommunity
+- **HX711** by Bogdan Necula
+- **UniversalTelegramBot** by Brian Lough
+- **ESP32 Servo** by Kevin Harrington
+
 ## ⚙️ Setup Instructions
 1. Install required libraries via Library Manager in Arduino IDE.
 2. Configure Wi-Fi credentials and Telegram Bot token in the sketch.
