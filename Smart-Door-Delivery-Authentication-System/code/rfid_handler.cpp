@@ -43,6 +43,8 @@ bool isUidAuthorized(byte* uid) {
 }
 
 void addUid(String uid) {
+  uid.trim();
+  uid.toUpperCase();
   File file = SD_MMC.open(UID_FILE, FILE_APPEND);
   if (!file) {
     bot.sendMessage(CHAT_ID, "Failed to open UID file.", "");
@@ -54,6 +56,8 @@ void addUid(String uid) {
 }
 
 void removeUid(String uid) {
+  uid.trim();
+  uid.toUpperCase();
   File file = SD_MMC.open(UID_FILE, FILE_READ);
   if (!file) {
     bot.sendMessage(CHAT_ID, "Failed to open UID file.", "");
