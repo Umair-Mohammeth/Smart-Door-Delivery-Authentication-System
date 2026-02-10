@@ -1,4 +1,5 @@
 #include "telegram_handler.h"
+#include "config.h"
 #include "main.h"
 #include "rfid_handler.h"
 #include "camera_handler.h"

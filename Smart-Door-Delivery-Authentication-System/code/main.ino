@@ -7,9 +7,10 @@
 #include <SPI.h>
 #include <HX711.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <FS.h>
 #include <SD_MMC.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 // Initialize libraries
 MFRC522 mfrc522(SS_PIN, RST_PIN);
@@ -20,6 +21,7 @@ UniversalTelegramBot bot(BOT_TOKEN, client);
 
 unsigned long lastExecutionTime = 0;
 unsigned long doorUnlockTime = 0;
+bool parcelDetected = false;
 
 void setup() {
   Serial.begin(115200);
@@ -42,6 +44,7 @@ void setup() {
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
+  client.setInsecure();
 
   // Initialize SD Card
   if(!SD_MMC.begin()){
@@ -96,11 +99,16 @@ void loop() {
 }
 
 void handleWeight() {
-  long reading = scale.read();
-  Serial.print("HX711 reading: ");
+  float reading = scale.get_units(5);
+  Serial.print("Weight reading: ");
   Serial.println(reading);
-  if (reading > PARCEL_DETECTION_THRESHOLD) { // Threshold for parcel presence
+
+  if (reading > PARCEL_DETECTION_THRESHOLD && !parcelDetected) {
     bot.sendMessage(CHAT_ID, "Parcel detected on the doorstep.", "");
+    parcelDetected = true;
+  } else if (reading < (PARCEL_DETECTION_THRESHOLD / 2.0) && parcelDetected) {
+    bot.sendMessage(CHAT_ID, "Parcel removed from the doorstep.", "");
+    parcelDetected = false;
   }
 }
 

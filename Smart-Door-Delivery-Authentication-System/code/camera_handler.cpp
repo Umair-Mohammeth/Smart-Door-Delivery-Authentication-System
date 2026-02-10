@@ -54,7 +54,8 @@ void captureImage(String eventType) {
     File file = fs.open(path.c_str(), FILE_WRITE);
     if(file){
       file.write(fb->buf, fb->len);
-      bot.sendMessage(CHAT_ID, "Image captured and saved.", "");
+      file.close();
+      bot.sendPhotoByBinary(CHAT_ID, "image/jpeg", fb->len, fb->buf, "Event: " + eventType, "");
     }
     esp_camera_fb_return(fb);
   }
