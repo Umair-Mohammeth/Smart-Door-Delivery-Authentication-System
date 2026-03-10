@@ -9,7 +9,7 @@
 #include <WiFi.h>
 #include <FS.h>
 #include <SD_MMC.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 // Initialize libraries
 MFRC522 mfrc522(SS_PIN, RST_PIN);
@@ -20,14 +20,18 @@ UniversalTelegramBot bot(BOT_TOKEN, client);
 
 unsigned long lastExecutionTime = 0;
 unsigned long doorUnlockTime = 0;
+bool parcelDetected = false;
 
 void setup() {
   Serial.begin(115200);
 
   // Initialize RFID
-  SPI.begin();
+  SPI.begin(RFID_SCK, RFID_MISO, RFID_MOSI, SS_PIN);
   mfrc522.PCD_Init();
   Serial.println("RFID reader initialized.");
+
+  // Set Telegram client to insecure mode for ESP32
+  client.setInsecure();
 
   // Initialize HX711
   scale.begin(HX711_DOUT_PIN, HX711_SCK_PIN);
@@ -43,8 +47,8 @@ void setup() {
   }
   Serial.println("Connected to WiFi");
 
-  // Initialize SD Card
-  if(!SD_MMC.begin()){
+  // Initialize SD Card in 1-bit mode to free up GPIOs 4, 12, and 13
+  if(!SD_MMC.begin("/sdcard", true)){
     Serial.println("Card Mount Failed");
     return;
   }
@@ -100,7 +104,12 @@ void handleWeight() {
   Serial.print("HX711 reading: ");
   Serial.println(reading);
   if (reading > PARCEL_DETECTION_THRESHOLD) { // Threshold for parcel presence
-    bot.sendMessage(CHAT_ID, "Parcel detected on the doorstep.", "");
+    if (!parcelDetected) {
+      bot.sendMessage(CHAT_ID, "Parcel detected on the doorstep.", "");
+      parcelDetected = true;
+    }
+  } else {
+    parcelDetected = false;
   }
 }
 

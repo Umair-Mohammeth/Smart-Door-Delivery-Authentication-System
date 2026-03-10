@@ -45,6 +45,16 @@ void camera_init() {
   }
 }
 
+static camera_fb_t * current_fb = nullptr;
+
+size_t fb_callback(uint8_t *buffer, size_t index) {
+  if (!current_fb) return 0;
+  size_t remaining = current_fb->len - index;
+  size_t chunk = remaining < 1024 ? remaining : 1024;
+  memcpy(buffer, &current_fb->buf[index], chunk);
+  return chunk;
+}
+
 void captureImage(String eventType) {
   Serial.println("Capturing image...");
   camera_fb_t * fb = esp_camera_fb_get();
@@ -54,7 +64,15 @@ void captureImage(String eventType) {
     File file = fs.open(path.c_str(), FILE_WRITE);
     if(file){
       file.write(fb->buf, fb->len);
-      bot.sendMessage(CHAT_ID, "Image captured and saved.", "");
+      file.close();
+
+      current_fb = fb;
+      bot.sendPhotoByBinary(CHAT_ID, "image/jpeg", fb->len,
+                            fb_callback,
+                            nullptr);
+      current_fb = nullptr;
+
+      bot.sendMessage(CHAT_ID, "Image captured, saved, and sent.", "");
     }
     esp_camera_fb_return(fb);
   }
