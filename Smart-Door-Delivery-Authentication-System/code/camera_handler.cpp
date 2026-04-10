@@ -5,6 +5,9 @@
 #include "SD_MMC.h"
 #include "main.h"
 
+// Static variables to manage camera buffer for Telegram transmission
+static camera_fb_t * current_fb = NULL;
+
 void camera_init() {
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -40,22 +43,62 @@ void camera_init() {
 
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
+    Serial.printf("Camera init failed with error 0x%x\n", err);
     return;
   }
+}
+
+// Telegram callback to get the next byte of the photo
+bool isMoreDataAvailable() {
+  return (current_fb != NULL);
+}
+
+uint8_t photoNextByte() {
+  static size_t index = 0;
+  if (current_fb == NULL) {
+    index = 0;
+    return 0;
+  }
+  uint8_t b = current_fb->buf[index++];
+  if (index >= current_fb->len) {
+    index = 0;
+    current_fb = NULL; // Mark as finished
+  }
+  return b;
 }
 
 void captureImage(String eventType) {
   Serial.println("Capturing image...");
   camera_fb_t * fb = esp_camera_fb_get();
-  if (fb) {
-    String path = "/" + eventType + "_" + String(millis()) + ".jpg";
-    fs::FS &fs = SD_MMC;
-    File file = fs.open(path.c_str(), FILE_WRITE);
-    if(file){
-      file.write(fb->buf, fb->len);
-      bot.sendMessage(CHAT_ID, "Image captured and saved.", "");
-    }
-    esp_camera_fb_return(fb);
+  if (!fb) {
+    Serial.println("Camera capture failed");
+    return;
   }
+
+  // Save to SD Card
+  String path = "/" + eventType + "_" + String(millis()) + ".jpg";
+  File file = SD_MMC.open(path.c_str(), FILE_WRITE);
+  if (file) {
+    file.write(fb->buf, fb->len);
+    file.close();
+    Serial.printf("Image saved to: %s\n", path.c_str());
+  } else {
+    Serial.println("Failed to save image to SD card");
+  }
+
+  // Send to Telegram
+  Serial.println("Sending photo to Telegram...");
+  current_fb = fb;
+  String response = bot.sendPhotoByBinary(CHAT_ID, "image/jpeg", fb->len,
+                                          isMoreDataAvailable, photoNextByte,
+                                          nullptr, nullptr);
+
+  if (response != "") {
+    Serial.println("Telegram photo sent successfully");
+  } else {
+    Serial.println("Failed to send photo to Telegram");
+  }
+
+  esp_camera_fb_return(fb);
+  current_fb = NULL;
 }

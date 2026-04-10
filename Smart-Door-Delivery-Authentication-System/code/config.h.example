@@ -23,31 +23,41 @@
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
-// RFID Reader
+// RFID Reader (SPI Pins shared with SD Card: SCK=14, MISO=2, MOSI=15)
 #define SS_PIN    13
-#define RST_PIN   12
+#define RST_PIN   -1 // Set to -1 if RST is tied to 3.3V to save a pin
+#define RFID_SCK  14
+#define RFID_MISO 2
+#define RFID_MOSI 15
+
 // HX711 Load Cell
-#define HX711_DOUT_PIN 2
-#define HX711_SCK_PIN  4
+#define HX711_DOUT_PIN 12
+#define HX711_SCK_PIN  33 // Shared with onboard red LED (inverted logic)
+
 // Servo Motor
-#define SERVO_PIN 15
+#define SERVO_PIN 4 // Shared with onboard white Flash LED
+
 // Tamper Sensor (e.g., SW-420 vibration sensor)
-#define TAMPER_PIN 14
+#define TAMPER_PIN 16 // GPIO 16 is typically available on the header
 
 // -- System Parameters --
 // How often the main loop runs (in milliseconds)
 const unsigned long executionInterval = 1000;
 // How long the door stays unlocked (in milliseconds)
-const unsigned long doorUnlockDuration = 1000;
+const unsigned long doorUnlockDuration = 5000;
 // Cooldown period for tamper alerts to prevent spam (in milliseconds)
-const unsigned long tamperAlertInterval = 5000;
+const unsigned long tamperAlertInterval = 60000;
+// Interval for checking messages and sensors
+const unsigned long sensorCheckInterval = 500;
 
 // -- Sensor & Actuator Settings --
 // Servo positions for locked and unlocked states
 const int SERVO_LOCKED_POS = 0;
 const int SERVO_UNLOCKED_POS = 90;
-// Weight threshold to detect a parcel
-#define PARCEL_DETECTION_THRESHOLD 1000
+// Weight threshold to detect a parcel (in grams/units after calibration)
+#define PARCEL_DETECTION_THRESHOLD 500
+// Debounce time for parcel detection to avoid false positives
+const unsigned long parcelDebounceTime = 3000;
 // Calibration factor for the load cell (run a calibration sketch to find this value)
 #define HX711_CALIBRATION_FACTOR 1.0
 
