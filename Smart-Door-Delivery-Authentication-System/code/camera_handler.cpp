@@ -45,6 +45,16 @@ void camera_init() {
   }
 }
 
+static camera_fb_t* global_fb = nullptr;
+
+size_t photoDataCallback(uint8_t *buffer, size_t index, size_t length) {
+  if (global_fb) {
+    memcpy(buffer, global_fb->buf + index, length);
+    return length;
+  }
+  return 0;
+}
+
 void captureImage(String eventType) {
   Serial.println("Capturing image...");
   camera_fb_t * fb = esp_camera_fb_get();
@@ -54,7 +64,14 @@ void captureImage(String eventType) {
     File file = fs.open(path.c_str(), FILE_WRITE);
     if(file){
       file.write(fb->buf, fb->len);
-      bot.sendMessage(CHAT_ID, "Image captured and saved.", "");
+      file.close();
+
+      global_fb = fb;
+      bot.sendPhotoByBinary(CHAT_ID, "image/jpeg", fb->len,
+                            photoDataCallback, nullptr, nullptr);
+      global_fb = nullptr;
+
+      bot.sendMessage(CHAT_ID, "Image captured, saved and sent to Telegram.", "");
     }
     esp_camera_fb_return(fb);
   }

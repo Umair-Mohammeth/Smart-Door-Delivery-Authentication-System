@@ -25,14 +25,14 @@
 
 // RFID Reader
 #define SS_PIN    13
-#define RST_PIN   12
+#define RST_PIN   -1
 // HX711 Load Cell
-#define HX711_DOUT_PIN 2
-#define HX711_SCK_PIN  4
+#define HX711_DOUT_PIN 12
+#define HX711_SCK_PIN  33
 // Servo Motor
-#define SERVO_PIN 15
+#define SERVO_PIN 4
 // Tamper Sensor (e.g., SW-420 vibration sensor)
-#define TAMPER_PIN 14
+#define TAMPER_PIN 16
 
 // -- System Parameters --
 // How often the main loop runs (in milliseconds)
