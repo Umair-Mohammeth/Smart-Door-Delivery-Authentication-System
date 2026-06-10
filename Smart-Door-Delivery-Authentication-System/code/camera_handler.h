@@ -5,5 +5,6 @@
 
 void camera_init();
 void captureImage(String eventType);
+void captureAndSendPhoto(String eventType);
 
 #endif // CAMERA_HANDLER_H
