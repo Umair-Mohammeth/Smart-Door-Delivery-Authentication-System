@@ -5,7 +5,9 @@
 #define CHAT_ID "YOUR_CHAT_ID"
 
 // -- Hardware Pin Definitions --
-// AI-Thinker ESP32-CAM
+// AI-Thinker ESP32-CAM (Fixed Pin Mapping)
+// Note: We use LittleFS instead of SD_MMC to free up GPIOs for sensors.
+
 #define PWDN_GPIO_NUM     32
 #define RESET_GPIO_NUM    -1
 #define XCLK_GPIO_NUM      0
@@ -23,36 +25,38 @@
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
-// RFID Reader
+// RFID Reader (MFRC522)
+// SPI Pins (Standard for ESP32-CAM when SD is disabled)
 #define SS_PIN    13
-#define RST_PIN   12
+#define RST_PIN   -1 // Tie to 3.3V
+#define SCK_PIN   14
+#define MISO_PIN  2
+#define MOSI_PIN  15
+
 // HX711 Load Cell
-#define HX711_DOUT_PIN 2
-#define HX711_SCK_PIN  4
+#define HX711_DOUT_PIN 12
+#define HX711_SCK_PIN  33 // Red LED pin
+
 // Servo Motor
-#define SERVO_PIN 15
-// Tamper Sensor (e.g., SW-420 vibration sensor)
-#define TAMPER_PIN 14
+#define SERVO_PIN 1 // U0TXD (Requires disconnecting Serial for operation, or use 14/15/13/2 if RFID is not used)
+// Alternative: If RFID is required, use Pin 4 (Flash LED) for Servo if pulse interference is acceptable.
+// We will stick to Pin 4 for now to keep Serial debugging available.
+#define SERVO_PIN_ALT 4
+
+// Tamper Sensor
+#define TAMPER_PIN 3 // U0RXD (Requires disconnecting Serial for operation)
 
 // -- System Parameters --
-// How often the main loop runs (in milliseconds)
 const unsigned long executionInterval = 1000;
-// How long the door stays unlocked (in milliseconds)
-const unsigned long doorUnlockDuration = 1000;
-// Cooldown period for tamper alerts to prevent spam (in milliseconds)
-const unsigned long tamperAlertInterval = 5000;
+const unsigned long doorUnlockDuration = 5000;
+const unsigned long tamperAlertInterval = 10000;
 
 // -- Sensor & Actuator Settings --
-// Servo positions for locked and unlocked states
 const int SERVO_LOCKED_POS = 0;
 const int SERVO_UNLOCKED_POS = 90;
-// Weight threshold to detect a parcel
 #define PARCEL_DETECTION_THRESHOLD 1000
-// Calibration factor for the load cell (run a calibration sketch to find this value)
 #define HX711_CALIBRATION_FACTOR 1.0
 
 // -- RFID Configuration --
-// The length of the UID (usually 4 or 7 bytes)
 #define UID_LENGTH 4
-// Path to the file storing authorized UIDs on the SD card
 #define UID_FILE "/uids.txt"

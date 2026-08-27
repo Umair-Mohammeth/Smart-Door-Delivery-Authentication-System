@@ -2,8 +2,10 @@
 #include "config.h"
 #include "esp_camera.h"
 #include "FS.h"
-#include "SD_MMC.h"
+#include "LittleFS.h"
 #include "main.h"
+
+static camera_fb_t * current_fb = NULL;
 
 void camera_init() {
   camera_config_t config;
@@ -46,16 +48,31 @@ void camera_init() {
 }
 
 void captureImage(String eventType) {
-  Serial.println("Capturing image...");
-  camera_fb_t * fb = esp_camera_fb_get();
-  if (fb) {
-    String path = "/" + eventType + "_" + String(millis()) + ".jpg";
-    fs::FS &fs = SD_MMC;
-    File file = fs.open(path.c_str(), FILE_WRITE);
-    if(file){
-      file.write(fb->buf, fb->len);
-      bot.sendMessage(CHAT_ID, "Image captured and saved.", "");
-    }
-    esp_camera_fb_return(fb);
+  // Logic for local storage is removed to prevent GPIO conflicts with SD Card
+  Serial.println("Local capture disabled to avoid GPIO conflicts.");
+}
+
+void captureAndSendPhoto(String eventType) {
+  Serial.println("Capturing image for Telegram...");
+  current_fb = esp_camera_fb_get();
+  if (!current_fb) {
+    Serial.println("Camera capture failed");
+    bot.sendMessage(CHAT_ID, "Camera capture failed", "");
+    return;
   }
+
+  String response = bot.sendPhotoByBinary(CHAT_ID, "image/jpeg", current_fb->len,
+    [](uint8_t *buffer, size_t len, size_t index) {
+      memcpy(buffer, current_fb->buf + index, len);
+    },
+    nullptr, nullptr);
+
+  if (response != "") {
+    Serial.println("Photo sent to Telegram.");
+  } else {
+    Serial.println("Failed to send photo to Telegram.");
+  }
+
+  esp_camera_fb_return(current_fb);
+  current_fb = NULL;
 }

@@ -3,22 +3,36 @@
 #include "main.h"
 #include "camera_handler.h"
 #include "FS.h"
-#include "SD_MMC.h"
+#include "LittleFS.h"
 
 void handleRfid() {
+  String uidStr = "";
+  for (byte i = 0; i < mfrc522.uid.size; i++) {
+    uidStr += String(mfrc522.uid.uidByte[i] < 0x10 ? "0" : "");
+    uidStr += String(mfrc522.uid.uidByte[i], HEX);
+  }
+  uidStr.toUpperCase();
+
+  Serial.print("RFID Scan: ");
+  Serial.println(uidStr);
+
   if (isUidAuthorized(mfrc522.uid.uidByte)) {
+    Serial.println("Authorized Access!");
     unlockDoor();
-    captureImage("delivery");
-    bot.sendMessage(CHAT_ID, "Delivery person authenticated.", "");
+    bot.sendMessage(CHAT_ID, "Authorized delivery: " + uidStr, "");
+    captureAndSendPhoto("delivery_auth");
   } else {
-    bot.sendMessage(CHAT_ID, "Unauthorized RFID scan detected.", "");
+    Serial.println("Unauthorized Access!");
+    bot.sendMessage(CHAT_ID, "Unauthorized RFID scan: " + uidStr, "");
+    captureAndSendPhoto("delivery_unauth");
   }
   mfrc522.PICC_HaltA();
 }
 
 bool isUidAuthorized(byte* uid) {
-  File file = SD_MMC.open(UID_FILE);
+  File file = LittleFS.open(UID_FILE, FILE_READ);
   if (!file) {
+    Serial.println("Failed to open UID file for reading.");
     return false;
   }
 
@@ -29,32 +43,38 @@ bool isUidAuthorized(byte* uid) {
   }
   uidStr.toUpperCase();
 
+  bool authorized = false;
   while (file.available()) {
     String line = file.readStringUntil('\n');
     line.trim();
+    line.toUpperCase();
     if (uidStr.equals(line)) {
-      file.close();
-      return true;
+      authorized = true;
+      break;
     }
   }
 
   file.close();
-  return false;
+  return authorized;
 }
 
 void addUid(String uid) {
-  File file = SD_MMC.open(UID_FILE, FILE_APPEND);
+  uid.trim();
+  uid.toUpperCase();
+  File file = LittleFS.open(UID_FILE, FILE_APPEND);
   if (!file) {
-    bot.sendMessage(CHAT_ID, "Failed to open UID file.", "");
+    bot.sendMessage(CHAT_ID, "Failed to open UID file for appending.", "");
     return;
   }
   file.println(uid);
   file.close();
-  bot.sendMessage(CHAT_ID, "UID added.", "");
+  bot.sendMessage(CHAT_ID, "UID " + uid + " added.", "");
 }
 
 void removeUid(String uid) {
-  File file = SD_MMC.open(UID_FILE, FILE_READ);
+  uid.trim();
+  uid.toUpperCase();
+  File file = LittleFS.open(UID_FILE, FILE_READ);
   if (!file) {
     bot.sendMessage(CHAT_ID, "Failed to open UID file.", "");
     return;
@@ -65,6 +85,7 @@ void removeUid(String uid) {
   while (file.available()) {
     String line = file.readStringUntil('\n');
     line.trim();
+    line.toUpperCase();
     if (line.equals(uid)) {
       found = true;
     } else {
@@ -74,11 +95,11 @@ void removeUid(String uid) {
   file.close();
 
   if (found) {
-    file = SD_MMC.open(UID_FILE, FILE_WRITE);
+    file = LittleFS.open(UID_FILE, FILE_WRITE);
     file.print(tempFileContent);
     file.close();
-    bot.sendMessage(CHAT_ID, "UID removed.", "");
+    bot.sendMessage(CHAT_ID, "UID " + uid + " removed.", "");
   } else {
-    bot.sendMessage(CHAT_ID, "UID not found.", "");
+    bot.sendMessage(CHAT_ID, "UID " + uid + " not found.", "");
   }
 }
